@@ -17,16 +17,10 @@ type Token struct {
 	Iat    int64
 	Exp    int64
 	Mac    string
+	Val    string
 }
 
-func GenerateToken(secretKey, userID string, ttl time.Duration) (string, error) {
-	if secretKey == "" {
-		return "", ErrEmptySecretKey
-	}
-	if userID == "" || ttl <= 0 {
-		return "", ErrInvalidInput
-	}
-
+func GenerateToken(secretKey, userID string, ttl time.Duration) *Token {
 	issuedAt := currentUnix()
 	expiresAt := issuedAt + int64(ttl.Seconds())
 
@@ -38,7 +32,14 @@ func GenerateToken(secretKey, userID string, ttl time.Duration) (string, error) 
 	mac := computeHmac(secretKey, serialized)
 
 	token := strings.Join([]string{userPart, iatPart, expPart, mac}, externalSep)
-	return token, nil
+
+	return &Token{
+		UserID: userID,
+		Iat:    issuedAt,
+		Exp:    expiresAt,
+		Mac:    mac,
+		Val:    token,
+	}
 }
 
 func ParseToken(token string) (*Token, error) {
