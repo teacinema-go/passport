@@ -79,6 +79,7 @@ func ParseToken(token string) (*Token, error) {
 		Iat:    iat,
 		Exp:    exp,
 		Mac:    parts[3],
+		Val:    token,
 	}, nil
 }
 
