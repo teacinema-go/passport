@@ -20,6 +20,16 @@ type Token struct {
 	Val    string
 }
 
+func (t *Token) VerifyToken(secretKey string) bool {
+	serialized := serialize(
+		base64UrlEncode(t.UserID),
+		base64UrlEncode(strconv.FormatInt(t.Iat, 10)),
+		base64UrlEncode(strconv.FormatInt(t.Exp, 10)),
+	)
+	expectedMac := computeHmac(secretKey, serialized)
+	return equal(expectedMac, t.Mac)
+}
+
 func GenerateToken(secretKey, userID string, ttl time.Duration) *Token {
 	issuedAt := currentUnix()
 	expiresAt := issuedAt + int64(ttl.Seconds())
@@ -81,14 +91,4 @@ func ParseToken(token string) (*Token, error) {
 		Mac:    parts[3],
 		Val:    token,
 	}, nil
-}
-
-func VerifyToken(token *Token, secretKey string) bool {
-	serialized := serialize(
-		base64UrlEncode(token.UserID),
-		base64UrlEncode(strconv.FormatInt(token.Iat, 10)),
-		base64UrlEncode(strconv.FormatInt(token.Exp, 10)),
-	)
-	expectedMac := computeHmac(secretKey, serialized)
-	return equal(expectedMac, token.Mac)
 }
